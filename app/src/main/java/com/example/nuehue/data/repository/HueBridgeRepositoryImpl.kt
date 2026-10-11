@@ -40,6 +40,7 @@ class HueBridgeRepositoryImpl @Inject constructor(
             }
             is Resource.Error -> cloudResult
             is Resource.Loading -> cloudResult
+            is Resource.Idle -> cloudResult
         }
     }
 

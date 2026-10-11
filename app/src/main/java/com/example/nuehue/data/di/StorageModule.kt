@@ -19,14 +19,4 @@ abstract class StorageBindingModule {
     abstract fun bindCredentialsStorage(
         credentialsStorageImpl: CredentialsStorageImpl
     ): CredentialsStorage
-
-    companion object {
-        @Provides
-        @Singleton
-        fun provideGson(): Gson {
-            return com.google.gson.GsonBuilder()
-                .setLenient()
-                .create()
-        }
-    }
 }

@@ -40,6 +40,10 @@ class PairWithBridgeUseCase @Inject constructor(
                     delay(pollIntervalMs)
                     continue
                 }
+                is Resource.Idle -> {
+                    delay(pollIntervalMs)
+                    continue
+                }
             }
         }
 

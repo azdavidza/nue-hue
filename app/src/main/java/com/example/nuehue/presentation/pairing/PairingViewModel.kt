@@ -41,8 +41,8 @@ class PairingViewModel @Inject constructor(
     private val _pairingProgress = MutableStateFlow("")
     val pairingProgress: StateFlow<String> = _pairingProgress.asStateFlow()
 
-    private val _credentialsState = MutableStateFlow<Resource<HueCredentials>?>(null)
-    val credentialsState: StateFlow<Resource<HueCredentials>?> = _credentialsState.asStateFlow()
+    private val _credentialsState = MutableStateFlow<Resource<HueCredentials?>>(Resource.Idle)
+    val credentialsState: StateFlow<Resource<HueCredentials?>> = _credentialsState.asStateFlow()
 
     private val _manualIpInput = MutableStateFlow("")
     val manualIpInput: StateFlow<String> = _manualIpInput.asStateFlow()
@@ -99,20 +99,25 @@ class PairingViewModel @Inject constructor(
     fun clearCredentials() {
         viewModelScope.launch {
             _credentialsState.value = Resource.Loading("Clearing credentials...")
-            _credentialsState.value = clearCredentialsUseCase()
+            val result = clearCredentialsUseCase()
+            if (result is Resource.Success) {
+                _credentialsState.value = Resource.Success(null)
+            } else {
+                _credentialsState.value = result as Resource.Error
+            }
         }
     }
 
     fun resetDiscoveryState() {
-        _discoveryState.value = null
+        _discoveryState.value = Resource.Idle
     }
 
     fun resetValidationState() {
-        _validationState.value = null
+        _validationState.value = Resource.Idle
     }
 
     fun resetPairingState() {
-        _pairingState.value = null
+        _pairingState.value = Resource.Idle
         _pairingProgress.value = ""
     }
 }

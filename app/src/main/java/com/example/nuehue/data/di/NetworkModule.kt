@@ -4,6 +4,7 @@ import com.example.nuehue.data.api.CloudDiscoveryApi
 import com.example.nuehue.data.api.CloudDiscoveryServiceImpl
 import com.example.nuehue.data.api.HueApi
 import com.example.nuehue.data.api.HueLocalServiceImpl
+import com.example.nuehue.data.api.MdnsDiscoveryServiceImpl
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -93,5 +94,13 @@ object NetworkModule {
         cloudDiscoveryApi: CloudDiscoveryApi
     ): com.example.nuehue.data.api.CloudDiscoveryService {
         return CloudDiscoveryServiceImpl(cloudDiscoveryApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMdnsDiscoveryService(
+        mdnsDiscoveryServiceImpl: MdnsDiscoveryServiceImpl
+    ): com.example.nuehue.data.api.MdnsDiscoveryService {
+        return mdnsDiscoveryServiceImpl
     }
 }

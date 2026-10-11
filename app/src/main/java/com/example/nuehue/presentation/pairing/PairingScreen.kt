@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nuehue.R
 import com.example.nuehue.data.api.model.HueBridge
 import com.example.nuehue.domain.model.Resource
+import com.example.nuehue.domain.usecase.DiscoverBridgeUseCase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +64,7 @@ fun PairingScreen(
                         ) {
                             Button(
                                 onClick = {
-                                    viewModel.discoverBridges()
+                                    viewModel.discoverBridges(DiscoverBridgeUseCase.DiscoveryMethod.MDNS)
                                     showManualIpInput = false
                                 },
                                 modifier = Modifier.weight(1f)
@@ -93,77 +94,83 @@ fun PairingScreen(
             }
 
             // Discovery Results
-            discoveryState?.let { state ->
-                item {
-                    when (state) {
-                        is Resource.Loading -> {
+            when (val state = discoveryState) {
+                null -> {}
+                is Resource.Idle -> {}
+                is Resource.Loading -> {
+                    item {
+                        Card {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(state.message ?: stringResource(R.string.scanning_network))
+                            }
+                        }
+                    }
+                }
+                is Resource.Success -> {
+                    if (state.data.isEmpty()) {
+                        item {
                             Card {
                                 Column(
                                     modifier = Modifier.padding(16.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    CircularProgressIndicator()
+                                    Text(stringResource(R.string.no_bridges_found))
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text(state.message ?: stringResource(R.string.scanning_network))
-                                }
-                            }
-                        }
-                        is Resource.Success -> {
-                            if (state.data.isEmpty()) {
-                                Card {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(stringResource(R.string.no_bridges_found))
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Button(onClick = { showManualIpInput = true }) {
-                                            Text("Enter IP Manually")
-                                        }
-                                    }
-                                }
-                            } else {
-                                Card {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = "Found ${state.data.size} bridge(s)",
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                        state.data.forEach { bridge ->
-                                            BridgeItem(
-                                                bridge = bridge,
-                                                selected = selectedBridge == bridge,
-                                                onSelect = {
-                                                    selectedBridge = it
-                                                    viewModel.validateConnection(it.ip)
-                                                }
-                                            )
-                                        }
+                                    Button(onClick = { showManualIpInput = true }) {
+                                        Text("Enter IP Manually")
                                     }
                                 }
                             }
                         }
-                        is Resource.Error -> {
+                    } else {
+                        item {
                             Card {
                                 Column(
                                     modifier = Modifier.padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.error_occurred),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.error
+                                        text = "Found ${state.data.size} bridge(s)",
+                                        style = MaterialTheme.typography.titleMedium
                                     )
-                                    Text(state.message)
-                                    Button(
-                                        onClick = { showManualIpInput = true },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Enter IP Manually")
+                                    state.data.forEach { bridge ->
+                                        BridgeItem(
+                                            bridge = bridge,
+                                            selected = selectedBridge == bridge,
+                                            onSelect = {
+                                                selectedBridge = it
+                                                viewModel.validateConnection(it.ip)
+                                            }
+                                        )
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    item {
+                        Card {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.error_occurred),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Text(state.message)
+                                Button(
+                                    onClick = { showManualIpInput = true },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Enter IP Manually")
                                 }
                             }
                         }
@@ -212,72 +219,76 @@ fun PairingScreen(
             }
 
             // Validation State
-            validationState?.let { state ->
-                item {
-                    when (state) {
-                        is Resource.Loading -> {
-                            Card {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+            when (val state = validationState) {
+                null -> {}
+                is Resource.Idle -> {}
+                is Resource.Loading -> {
+                    item {
+                        Card {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(stringResource(R.string.validating_connection))
+                            }
+                        }
+                    }
+                }
+                is Resource.Success -> {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.connection_successful),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text("Bridge IP: ${selectedBridge?.ip}")
+                                Button(
+                                    onClick = {
+                                        selectedBridge?.let { bridge ->
+                                            viewModel.pairWithBridge(bridge.ip)
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    CircularProgressIndicator()
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(stringResource(R.string.validating_connection))
+                                    Text("Start Pairing")
                                 }
                             }
                         }
-                        is Resource.Success -> {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                )
+                    }
+                }
+                is Resource.Error -> {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.connection_successful),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text("Bridge IP: ${selectedBridge?.ip}")
-                                    Button(
-                                        onClick = {
-                                            selectedBridge?.let { bridge ->
-                                                viewModel.pairWithBridge(bridge.ip)
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Start Pairing")
-                                    }
-                                }
-                            }
-                        }
-                        is Resource.Error -> {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                Text(
+                                    text = stringResource(R.string.connection_failed),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.error
                                 )
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                Text(state.message)
+                                Button(
+                                    onClick = { viewModel.resetValidationState() },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.connection_failed),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                    Text(state.message)
-                                    Button(
-                                        onClick = { viewModel.resetValidationState() },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(stringResource(R.string.retry))
-                                    }
+                                    Text(stringResource(R.string.retry))
                                 }
                             }
                         }
@@ -286,107 +297,111 @@ fun PairingScreen(
             }
 
             // Pairing State
-            pairingState?.let { state ->
-                item {
-                    when (state) {
-                        is Resource.Loading -> {
-                            Card {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            when (val state = pairingState) {
+                null -> {}
+                is Resource.Idle -> {}
+                is Resource.Loading -> {
+                    item {
+                        Card {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                CircularProgressIndicator()
+                                Text(stringResource(R.string.press_link_button))
+                                if (pairingProgress.isNotBlank()) {
+                                    Text(pairingProgress)
+                                }
+                                Button(
+                                    onClick = { viewModel.resetPairingState() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
                                 ) {
-                                    CircularProgressIndicator()
-                                    Text(stringResource(R.string.press_link_button))
-                                    if (pairingProgress.isNotBlank()) {
-                                        Text(pairingProgress)
-                                    }
-                                    Button(
-                                        onClick = { viewModel.resetPairingState() },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        )
-                                    ) {
-                                        Text(stringResource(R.string.cancel))
-                                    }
+                                    Text(stringResource(R.string.cancel))
                                 }
                             }
                         }
-                        is Resource.Success -> {
-                            val username = state.data.success?.username
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                )
+                    }
+                }
+                is Resource.Success -> {
+                    item {
+                        val username = state.data.success?.username
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.successfully_paired),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text("Bridge IP: ${selectedBridge?.ip}")
-                                    if (username != null) {
-                                        Text("Username: ${username.take(8)}...")
-                                    }
-                                    Button(
-                                        onClick = {
-                                            selectedBridge?.let { bridge ->
-                                                if (username != null) {
-                                                    viewModel.saveCredentials(
-                                                        com.example.nuehue.data.api.model.HueCredentials(
-                                                            bridgeIp = bridge.ip,
-                                                            username = username
-                                                        )
+                                Text(
+                                    text = stringResource(R.string.successfully_paired),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text("Bridge IP: ${selectedBridge?.ip}")
+                                if (username != null) {
+                                    Text("Username: ${username.take(8)}...")
+                                }
+                                Button(
+                                    onClick = {
+                                        selectedBridge?.let { bridge ->
+                                            if (username != null) {
+                                                viewModel.saveCredentials(
+                                                    com.example.nuehue.data.api.model.HueCredentials(
+                                                        bridgeIp = bridge.ip,
+                                                        username = username
                                                     )
-                                                }
+                                                )
                                             }
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Save Credentials")
-                                    }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Save Credentials")
                                 }
                             }
                         }
-                        is Resource.Error -> {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer
-                                )
+                    }
+                }
+                is Resource.Error -> {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                Text(
+                                    text = stringResource(R.string.error_occurred),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Text(state.message)
+                                Button(
+                                    onClick = {
+                                        selectedBridge?.let { bridge ->
+                                            viewModel.pairWithBridge(bridge.ip)
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.error_occurred),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                    Text(state.message)
-                                    Button(
-                                        onClick = {
-                                            selectedBridge?.let { bridge ->
-                                                viewModel.pairWithBridge(bridge.ip)
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(stringResource(R.string.retry))
-                                    }
-                                    Button(
-                                        onClick = { viewModel.resetPairingState() },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(stringResource(R.string.cancel))
-                                    }
+                                    Text(stringResource(R.string.retry))
+                                }
+                                Button(
+                                    onClick = { viewModel.resetPairingState() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(stringResource(R.string.cancel))
                                 }
                             }
                         }
@@ -395,44 +410,29 @@ fun PairingScreen(
             }
 
             // Credentials State
-            credentialsState?.let { state ->
-                item {
-                    when (state) {
-                        is Resource.Success -> {
-                            if (state.data != null) {
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                                    )
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = "Credentials Saved!",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.tertiary
-                                        )
-                                        Text("Bridge IP: ${state.data.bridgeIp}")
-                                        Text("You can now control your lights.")
-                                        Button(
-                                            onClick = { viewModel.clearCredentials() },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.error
-                                            ),
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(stringResource(R.string.reset))
-                                        }
-                                    }
-                                }
+            when (val state = credentialsState) {
+                null -> {}
+                is Resource.Idle -> {}
+                is Resource.Loading -> {
+                    item {
+                        Card {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Saving credentials...")
                             }
                         }
-                        is Resource.Error -> {
+                    }
+                }
+                is Resource.Success -> {
+                    if (state.data != null) {
+                        item {
                             Card(
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
                                 )
                             ) {
                                 Column(
@@ -440,15 +440,45 @@ fun PairingScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "Failed to save credentials",
+                                        text = "Credentials Saved!",
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.error
+                                        color = MaterialTheme.colorScheme.tertiary
                                     )
-                                    Text(state.message)
+                                    Text("Bridge IP: ${state.data.bridgeIp}")
+                                    Text("You can now control your lights.")
+                                    Button(
+                                        onClick = { viewModel.clearCredentials() },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(stringResource(R.string.reset))
+                                    }
                                 }
                             }
                         }
-                        else -> {}
+                    }
+                }
+                is Resource.Error -> {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Failed to save credentials",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Text(state.message)
+                            }
+                        }
                     }
                 }
             }

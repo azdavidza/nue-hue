@@ -39,6 +39,12 @@ fun AlreadyPairedScreen(
             verticalArrangement = Arrangement.Center
         ) {
             when (val state = credentialsState) {
+                is Resource.Idle -> {
+                    CircularProgressIndicator()
+                }
+                is Resource.Loading -> {
+                    CircularProgressIndicator()
+                }
                 is Resource.Success -> {
                     val credentials = state.data
                     if (credentials != null) {
@@ -83,9 +89,6 @@ fun AlreadyPairedScreen(
                         Text("No credentials found")
                     }
                 }
-                is Resource.Loading -> {
-                    CircularProgressIndicator()
-                }
                 is Resource.Error -> {
                     Card(
                         colors = CardDefaults.cardColors(
@@ -104,9 +107,6 @@ fun AlreadyPairedScreen(
                             Text(state.message)
                         }
                     }
-                }
-                null -> {
-                    CircularProgressIndicator()
                 }
             }
         }

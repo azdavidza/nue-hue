@@ -34,6 +34,12 @@ fun MainScreen(
     }
 
     when (val state = credentialsState) {
+        is com.example.nuehue.domain.model.Resource.Idle -> {
+            androidx.compose.material3.CircularProgressIndicator()
+        }
+        is com.example.nuehue.domain.model.Resource.Loading -> {
+            androidx.compose.material3.CircularProgressIndicator()
+        }
         is com.example.nuehue.domain.model.Resource.Success -> {
             if (state.data != null) {
                 AlreadyPairedScreen()
@@ -41,14 +47,8 @@ fun MainScreen(
                 PairingScreen()
             }
         }
-        is com.example.nuehue.domain.model.Resource.Loading -> {
-            androidx.compose.material3.CircularProgressIndicator()
-        }
         is com.example.nuehue.domain.model.Resource.Error -> {
             PairingScreen()
-        }
-        null -> {
-            androidx.compose.material3.CircularProgressIndicator()
         }
     }
 }

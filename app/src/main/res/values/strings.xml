@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">NueHue</string>
+    <string name="discover_bridge">Discover Bridge</string>
+    <string name="manual_ip_entry">Manual IP Entry</string>
+    <string name="enter_bridge_ip">Enter Bridge IP</string>
+    <string name="connect">Connect</string>
+    <string name="press_link_button">Press the link button on your Hue Bridge</string>
+    <string name="successfully_paired">Successfully Paired</string>
+    <string name="reset">Reset</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="already_connected">Already connected to Hue Bridge</string>
+    <string name="light_controls_coming_soon">Light controls coming in v0.2</string>
+    <string name="scanning_network">Scanning local network…</string>
+    <string name="no_bridges_found">No bridges found</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="validating_connection">Validating connection…</string>
+    <string name="connection_successful">Connection successful</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="link_button_not_pressed">Link button not pressed</string>
+    <string name="invalid_ip_address">Invalid IP address</string>
+</resources>

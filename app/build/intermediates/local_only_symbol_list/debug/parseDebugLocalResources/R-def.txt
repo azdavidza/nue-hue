@@ -1,0 +1,26 @@
+R_DEF: Internal format may change without notice
+local
+color ic_launcher_background
+mipmap ic_launcher
+string already_connected
+string app_name
+string cancel
+string connect
+string connection_failed
+string connection_successful
+string disconnect
+string discover_bridge
+string enter_bridge_ip
+string error_occurred
+string invalid_ip_address
+string light_controls_coming_soon
+string link_button_not_pressed
+string manual_ip_entry
+string no_bridges_found
+string press_link_button
+string reset
+string retry
+string scanning_network
+string successfully_paired
+string validating_connection
+style Theme.NueHue

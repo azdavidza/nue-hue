@@ -1,0 +1,4 @@
+com.example.nuehue.test.app-androidTest-0 C:\nue_hue\app\build\generated\res\resValues\androidTest\debug
+com.example.nuehue.test.app-mergeDebugAndroidTestResources-1 C:\nue_hue\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.example.nuehue.test.app-mergeDebugAndroidTestResources-2 C:\nue_hue\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.example.nuehue.test.app-debugAndroidTest-3 C:\nue_hue\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
